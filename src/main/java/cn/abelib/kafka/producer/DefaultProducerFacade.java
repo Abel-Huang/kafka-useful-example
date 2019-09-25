@@ -28,16 +28,14 @@ public class DefaultProducerFacade {
     /**
      * 同步发送后忽略返回值
      */
-    public void sendSyncIgnore(String topic) {
+    public void sendSyncIgnore(String key, JsonObject value, String topic) {
         try {
-            for (int i = 0; i < 10; i++) {
-                String uuid = UUID.randomUUID().toString();
-                JsonObject json = new JsonObject();
-                json.addProperty("uuid", uuid);
-                json.addProperty("timeStamp", Instant.now().getEpochSecond());
-                ProducerRecord<String, JsonObject> record = new ProducerRecord<>(topic, uuid, json);
-                producer.send(record).get();
-            }
+            String uuid = UUID.randomUUID().toString();
+            JsonObject json = new JsonObject();
+            json.addProperty("uuid", uuid);
+            json.addProperty("timeStamp", Instant.now().getEpochSecond());
+            ProducerRecord<String, JsonObject> record = new ProducerRecord<>(topic, key, value);
+            producer.send(record).get();
         }catch (ExecutionException | InterruptedException e) {
             log.error(e.getMessage());
         } finally {
@@ -48,15 +46,12 @@ public class DefaultProducerFacade {
     /**
      * 同步发送
      */
-    public void sendSync(String topic) {
+    public void sendSync(String key, JsonObject value, String topic) {
         try {
-            for (int i = 0; i < 10; i++) {
-                String uuid = UUID.randomUUID().toString();
-                ProducerRecord<String, String> record = new ProducerRecord<>(topic, uuid, uuid);
-                Future<RecordMetadata> future = producer.send(record);
-                RecordMetadata metadata = future.get();
-                log.info(metadata.topic() + " " + metadata.offset());
-            }
+            ProducerRecord<String, JsonObject> record = new ProducerRecord<>(topic, key, value);
+            Future<RecordMetadata> future = producer.send(record);
+            RecordMetadata metadata = future.get();
+            log.info(metadata.topic() + " " + metadata.offset());
         }catch (ExecutionException | InterruptedException e) {
             log.error(e.getMessage());
         }
@@ -65,25 +60,15 @@ public class DefaultProducerFacade {
     /**
      * 异步发送
      */
-    public void sendAsync(String topic) {
-        for (int i = 0; i < 10; i++) {
-            String uuid = UUID.randomUUID().toString();
-            ProducerRecord<String, JsonObject> record = new ProducerRecord<>(topic, uuid, getMsg(uuid));
-            // 回调, metadata 和 exception 是互斥的，只有一个不为 null
-          producer.send(record, (metadata, exception) -> {
-                if (Objects.nonNull(exception)) {
-                    log.error(exception.getMessage());
-                } else {
-                    log.info("topic=" + metadata.topic() + ", offset=" +  + metadata.offset());
-                }
-            });
-        }
-    }
-
-    private static JsonObject getMsg(String uuid) {
-        JsonObject json = new JsonObject();
-        json.addProperty("uuid", uuid);
-        json.addProperty("timeStamp", Instant.now().getEpochSecond());
-        return json;
+    public void sendAsync(String key, JsonObject value, String topic) {
+        ProducerRecord<String, JsonObject> record = new ProducerRecord<>(topic, key, value);
+        // 回调, metadata 和 exception 是互斥的，只有一个不为 null
+        producer.send(record, (metadata, exception) -> {
+            if (Objects.nonNull(exception)) {
+                log.error(exception.getMessage());
+            } else {
+                log.info("topic=" + metadata.topic() + ", offset=" +  + metadata.offset());
+            }
+        });
     }
 }
