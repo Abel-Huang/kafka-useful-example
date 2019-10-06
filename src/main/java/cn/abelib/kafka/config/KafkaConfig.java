@@ -28,6 +28,10 @@ public class KafkaConfig {
         props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, cn.abelib.kafka.producer.HashKeyPartitioner.class.getName());
         // 设置自定义生产者消息拦截器
         props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, cn.abelib.kafka.producer.QuotaProducerInterceptor.class.getName());
+        // 是否设置幂等生产者
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        // 设置transactional.id
+        props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional-producer");
         return props;
     }
 
@@ -42,6 +46,8 @@ public class KafkaConfig {
         props.put(ConsumerConfig.CLIENT_ID_CONFIG, "local-client-id");
         // 禁止自动提交位移
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        // 设置隔离级别
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
         return props;
     }
 

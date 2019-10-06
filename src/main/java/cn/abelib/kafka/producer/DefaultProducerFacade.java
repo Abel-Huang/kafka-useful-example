@@ -71,4 +71,8 @@ public class DefaultProducerFacade {
             }
         });
     }
+
+    public void close() {
+        this.producer.close();
+    }
 }
